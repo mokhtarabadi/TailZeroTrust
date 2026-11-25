@@ -122,6 +122,34 @@ until warp status 2>/dev/null | grep -qw Connected; do
 done
 warp status
 
+# Start mihomo mixed proxy (traffic egresses via WARP tunnel)
+echo "******************************"
+echo "** Start mihomo proxy        **"
+echo "******************************"
+
+mkdir -p /tailzerotrust/mihomo-data
+cp /tailzerotrust/mihomo-config.yaml /tailzerotrust/mihomo-data/config.yaml
+
+/usr/local/bin/mihomo -d /tailzerotrust/mihomo-data &
+MIHOMO_PID=$!
+
+i=0
+until [ -f /tailzerotrust/mihomo-data/config.yaml ] && kill -0 "$MIHOMO_PID" 2>/dev/null; do
+  if ! kill -0 "$MIHOMO_PID" 2>/dev/null || [ "$i" -ge 10 ]; then
+    echo "mihomo failed to start, continuing without proxy"
+    break
+  fi
+  sleep 1
+  i=$((i + 1))
+done
+
+if kill -0 "$MIHOMO_PID" 2>/dev/null; then
+  echo "mihomo started (PID $MIHOMO_PID), mixed-port 7890, LAN listen enabled"
+else
+  echo "WARNING: mihomo did not start"
+fi
+
+
 # Docker's embedded resolver answers from the host outside the tunnel, use the
 # fallback nameservers instead unless WARP has set up its own
 if grep -q '^nameserver 127\.0\.0\.11' /etc/resolv.conf; then

@@ -1,0 +1,13 @@
+# mihomo mixed proxy inside TailZeroTrust container.
+# All traffic egresses via the container's WARP tunnel.
+mixed-port: 7890
+allow-lan: true
+bind-address: '*'
+mode: rule
+log-level: info
+ipv6: false
+external-controller: 127.0.0.1:9090
+proxies: []
+proxy-groups: []
+rules:
+  - MATCH,DIRECT

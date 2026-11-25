@@ -132,3 +132,46 @@ releases every six hours. A Go update only refreshes `:latest`. When Tailscale
 or WARP is out, it bumps the version in the Dockerfile, tags the commit as `<tailscale>-warp<warp>`, publishes the image
 for `amd64` and creates a GitHub release. The image is also rebuilt
 daily from `main` to pick up Debian security updates.
+
+## Mihomo Proxy (added)
+
+This fork adds **mihomo** (Clash Meta) as a mixed proxy (HTTP + SOCKS5) on
+port **7890** inside the container. All traffic captured by mihomo egresses
+through the container's WARP tunnel, so clients using the proxy get a
+Cloudflare WARP IP.
+
+### Usage
+
+```bash
+# Build the image
+docker compose build
+
+# Run
+docker compose up -d
+
+# Use the proxy from any LAN client
+curl -x http://<host-ip>:7890 https://www.cloudflare.com/cdn-cgi/trace
+# Should show warp=on
+```
+
+### Configuration
+
+Mihomo config is in `mihomo-config.yaml`. Default: mixed-port 7890,
+allow-lan true, bind-address *, MATCH,DIRECT (all traffic goes direct
+through the container's WARP tunnel).
+
+### Ports
+
+| Port | Protocol | Purpose |
+|---|---|---|
+| 41641/udp | UDP | Tailscale direct connections |
+| 7890/tcp | TCP | Mihomo mixed proxy (HTTP + SOCKS5) |
+
+### Notes
+
+- Mihomo runs inside the container's network namespace, so all egress
+  goes through WARP automatically.
+- The host's own traffic is NOT routed through mihomo (avoids routing
+  loops). Use the Tailscale exit node or WARP proxy mode on the host
+  if host-level WARP is needed.
+- Mihomo external controller is on 127.0.0.1:9090 (inside container only).

@@ -1,73 +1,39 @@
-FROM golang:1.27.4-alpine3.24 AS build-env
+FROM ghcr.io/eurocruz/tailzerotrust:latest
 
-# Install latest version of git
-RUN apk add --update --no-cache git
+# Install mihomo (latest release)
+ARG MIHOMO_VERSION="v1.19.34"
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl && \
+    curl -fsSL -o /tmp/mihomo.gz "https://github.com/MetaCubeX/mihomo/releases/download/${MIHOMO_VERSION}/mihomo-linux-amd64-${MIHOMO_VERSION}.gz" && \
+    gunzip /tmp/mihomo.gz && \
+    chmod +x /tmp/mihomo && \
+    mv /tmp/mihomo /usr/local/bin/mihomo && \
+    rm -rf /var/lib/apt/lists/*
 
-# Let newer Tailscale releases pull the Go toolchain they require
-ENV GOTOOLCHAIN=auto
+# Copy mihomo config
+COPY mihomo-config.yaml /tailzerotrust/mihomo-config.yaml
 
-# Clone latest Tailscale version and patch it with customisation, some patches
-# are lifted from the PR https://github.com/tailscale/tailscale/pull/14575
-ARG TS_VERSION="v1.104.7"
-WORKDIR /go/src/tailscale
-COPY ./tailscale-patches /tmp/tailscale-patches
-RUN \
-  git -c advice.detachedHead=false clone --branch "$TS_VERSION" \
-    https://github.com/tailscale/tailscale.git /go/src/tailscale && \
-  git -c user.name="TailZeroTrust" -c user.email="" am /tmp/tailscale-patches/*.patch
+# Create wrapper entrypoint that starts mihomo then calls original
+RUN cat > /tailzerotrust/entrypoint-mihomo.sh << 'WRAPPER'
+#!/bin/sh
+set -e
 
-# Download dependencies and build Tailscale
-RUN go mod download
+# Start mihomo mixed proxy (traffic egresses via WARP tunnel)
+mkdir -p /tailzerotrust/mihomo-data
+cp /tailzerotrust/mihomo-config.yaml /tailzerotrust/mihomo-data/config.yaml
+/usr/local/bin/mihomo -d /tailzerotrust/mihomo-data &
+MIHOMO_PID=$!
+sleep 2
+if kill -0 "$MIHOMO_PID" 2>/dev/null; then
+  echo "mihomo started (PID $MIHOMO_PID), mixed-port 7890, LAN listen enabled"
+else
+  echo "WARNING: mihomo did not start"
+fi
 
-ARG TARGETARCH
-RUN \
-  eval `CGO_ENABLED=0 GOOS=$(go env GOHOSTOS) GOARCH=$(go env GOHOSTARCH) go run ./cmd/mkversion` && \
-  VERSION_LONG="$(echo $VERSION_LONG | rev | cut -d "-" -f 3- | rev)-TailZeroTrust" && \
-  CGO_ENABLED=0 GOARCH=$TARGETARCH go install -ldflags="-s -w \
-      -X 'tailscale.com/version.longStamp=$VERSION_LONG' \
-      -X 'tailscale.com/version.shortStamp=$VERSION_SHORT' \
-      -X 'tailscale.com/version.gitCommitStamp=$VERSION_GIT_HASH'" \
-      -v ./cmd/tailscale ./cmd/tailscaled ./cmd/containerboot && \
-  mkdir -p /out && find /go/bin -type f -exec cp {} /out/ \;
+# Call original entrypoint
+exec /tailzerotrust/entrypoint.sh "$@"
+WRAPPER
+RUN chmod 755 /tailzerotrust/entrypoint-mihomo.sh
 
-# Take only the daemon and the CLI out of the official Cloudflare WARP package,
-# the package itself depends on the whole desktop GUI stack
-FROM debian:bookworm-slim AS warp-env
+EXPOSE 7890
 
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl
-
-ARG WARP_VERSION="2026.8.2115.0"
-ARG TARGETARCH
-RUN \
-  repo=https://pkg.cloudflareclient.com && \
-  index="$(curl -fsSL "$repo/dists/bookworm/main/binary-$TARGETARCH/Packages")" && \
-  entry="$(echo "$index" | awk -v v="$WARP_VERSION" 'BEGIN{RS=""} index($0, "\nVersion: " v "\n")')" && \
-  { [ -n "$entry" ] || { echo "cloudflare-warp $WARP_VERSION not found in $repo"; exit 1; }; } && \
-  curl -fsSL -o /tmp/warp.deb "$repo/$(echo "$entry" | sed -n 's/^Filename: //p')" && \
-  echo "$(echo "$entry" | sed -n 's/^SHA256: //p')  /tmp/warp.deb" | sha256sum -c - && \
-  dpkg-deb -x /tmp/warp.deb /tmp/warp && \
-  mkdir -p /out && cp /tmp/warp/bin/warp-svc /tmp/warp/bin/warp-cli /out/
-
-# WARP is linked against glibc, so the runtime is Debian instead of Alpine
-FROM debian:bookworm-slim
-
-RUN \
-  apt-get update && \
-  apt-get install -y --no-install-recommends \
-    ca-certificates curl ethtool iproute2 iptables ipcalc-ng nftables dbus \
-    libdbus-1-3 libnss3 libtss2-esys-3.0.2-0 libtss2-tctildr0 libtss2-mu0 && \
-  ln -s /usr/bin/ipcalc-ng /usr/local/bin/ipcalc && \
-  rm -rf /var/lib/apt/lists/*
-
-WORKDIR /tailzerotrust
-
-COPY --from=build-env /out/* /usr/local/bin/
-COPY --from=warp-env /out/* /bin/
-
-COPY bin/* ./
-RUN chmod 755 *.sh
-
-HEALTHCHECK --interval=1m --timeout=10s --start-period=10s --start-interval=1s --retries=3 \
-  CMD ["/tailzerotrust/healthcheck.sh"]
-
-ENTRYPOINT ["/tailzerotrust/entrypoint.sh"]
+ENTRYPOINT ["/tailzerotrust/entrypoint-mihomo.sh"]
