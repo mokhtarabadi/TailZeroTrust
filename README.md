@@ -175,3 +175,21 @@ through the container's WARP tunnel).
   loops). Use the Tailscale exit node or WARP proxy mode on the host
   if host-level WARP is needed.
 - Mihomo external controller is on 127.0.0.1:9090 (inside container only).
+
+## Stable Identity
+
+The container uses a fixed Tailscale hostname and Tailnet IP:
+
+| Field | Value |
+|---|---|
+| Docker container name | `tailzerotrust-mihomo` |
+| Tailscale hostname | `warp-exit-mihomo` |
+| Tailnet IPv4 | `100.74.8.111` |
+| Mihomo proxy | `100.74.8.111:7890` (Tailnet) or `<host-ip>:7890` (LAN) |
+| Tailscale underlay port | `41642/udp` on the host |
+
+`TS_HOSTNAME=warp-exit-mihomo` is set in `docker-compose.yml` so the Tailscale
+hostname stays stable across restarts and container recreation. Tailscale
+state is persisted in the `./state` bind mount, preserving the node identity
+and Tailnet IP. Do not delete `./state` unless you intentionally want a new
+tailnet node and IP.

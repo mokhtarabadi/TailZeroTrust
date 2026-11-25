@@ -187,6 +187,8 @@ iptables -P INPUT DROP
 
 # Create a chain for TailGuard input, dropping incoming connections
 iptables -N tg-input
+# Allow mihomo mixed proxy through the container firewall
+iptables -I tg-input 1 -p tcp --dport 7890 -j ACCEPT
 if [ "${TG_EXPOSE_HOST}" -eq 1 ]; then
   iptables -A tg-input -i "${WARP_DEVICE}" -j ACCEPT
   iptables -A tg-input -i "${TS_DEVICE}" -j ACCEPT
@@ -219,6 +221,8 @@ ip6tables -P INPUT DROP
 
 # Create a chain for TailGuard input, dropping incoming connections
 ip6tables -N tg-input
+# Allow mihomo mixed proxy through the container firewall
+ip6tables -I tg-input 1 -p tcp --dport 7890 -j ACCEPT
 if [ "${TG_EXPOSE_HOST}" -eq 1 ]; then
   ip6tables -A tg-input -i "${WARP_DEVICE}" -j ACCEPT
   ip6tables -A tg-input -i "${TS_DEVICE}" -j ACCEPT

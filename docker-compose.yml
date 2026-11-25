@@ -4,7 +4,7 @@ services:
     build: .
     environment:
       - TS_AUTHKEY=${TS_AUTHKEY:-}
-      - TS_HOSTNAME=tailzerotrust-mihomo
+      - TS_HOSTNAME=warp-exit-mihomo
       # Zero Trust enrollment with a service token, leave empty for consumer WARP
       - WARP_ORGANIZATION=${WARP_ORGANIZATION:-}
       - WARP_AUTH_CLIENT_ID=${WARP_AUTH_CLIENT_ID:-}
