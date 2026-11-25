@@ -1,10 +1,13 @@
 services:
   tailzerotrust:
     image: ghcr.io/mokhtarabadi/tailzerotrust-mihomo:latest
+    container_name: tailzerotrust-mihomo
     build: .
+    pull_policy: build
     environment:
       - TS_AUTHKEY=${TS_AUTHKEY:-}
       - TS_HOSTNAME=warp-exit-mihomo
+      - TS_PORT=41641
       # Zero Trust enrollment with a service token, leave empty for consumer WARP
       - WARP_ORGANIZATION=${WARP_ORGANIZATION:-}
       - WARP_AUTH_CLIENT_ID=${WARP_AUTH_CLIENT_ID:-}
@@ -23,7 +26,7 @@ services:
     networks:
       - ip6net
     ports:
-      - "41641:41641/udp"
+      - "41642:41641/udp"
       - "7890:7890/tcp"
     restart: unless-stopped
 

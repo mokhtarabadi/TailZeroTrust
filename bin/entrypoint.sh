@@ -122,6 +122,21 @@ until warp status 2>/dev/null | grep -qw Connected; do
 done
 warp status
 
+# Docker's embedded resolver answers from the host outside the tunnel, use the
+# fallback nameservers instead unless WARP has set up its own
+if grep -q '^nameserver 127\.0\.0\.11' /etc/resolv.conf; then
+  echo "Replacing Docker DNS resolver with: ${TG_NAMESERVERS}"
+  for nameserver in $(echo "${TG_NAMESERVERS}" | tr "," "\n"); do
+    if ipcalc -s -c "$nameserver"; then
+      echo "nameserver $nameserver"
+    else
+      echo "Found an invalid nameserver \"$nameserver\", skipping..." >&2
+    fi
+  done > /etc/resolv.conf.new
+  cat /etc/resolv.conf.new > /etc/resolv.conf
+  rm -f /etc/resolv.conf.new
+fi
+
 # Start mihomo mixed proxy (traffic egresses via WARP tunnel)
 echo "******************************"
 echo "** Start mihomo proxy        **"
@@ -130,15 +145,11 @@ echo "******************************"
 mkdir -p /tailzerotrust/mihomo-data
 cp /tailzerotrust/mihomo-config.yaml /tailzerotrust/mihomo-data/config.yaml
 
-# Allow mihomo mixed port (7890) through the container firewall
-iptables -I INPUT 1 -p tcp --dport 7890 -j ACCEPT 2>/dev/null || true
-ip6tables -I INPUT 1 -p tcp --dport 7890 -j ACCEPT 2>/dev/null || true
-
 /usr/local/bin/mihomo -d /tailzerotrust/mihomo-data &
 MIHOMO_PID=$!
 
 i=0
-until [ -f /tailzerotrust/mihomo-data/config.yaml ] && kill -0 "$MIHOMO_PID" 2>/dev/null; do
+until curl -fsS http://127.0.0.1:9090/ >/dev/null 2>&1; do
   if ! kill -0 "$MIHOMO_PID" 2>/dev/null || [ "$i" -ge 10 ]; then
     echo "mihomo failed to start, continuing without proxy"
     break
@@ -154,20 +165,6 @@ else
 fi
 
 
-# Docker's embedded resolver answers from the host outside the tunnel, use the
-# fallback nameservers instead unless WARP has set up its own
-if grep -q '^nameserver 127\.0\.0\.11' /etc/resolv.conf; then
-  echo "Replacing Docker DNS resolver with: ${TG_NAMESERVERS}"
-  for nameserver in $(echo "${TG_NAMESERVERS}" | tr "," "\n"); do
-    if ipcalc -s -c "$nameserver"; then
-      echo "nameserver $nameserver"
-    else
-      echo "Found an invalid nameserver \"$nameserver\", skipping..." >&2
-    fi
-  done > /etc/resolv.conf.new
-  cat /etc/resolv.conf.new > /etc/resolv.conf
-  rm -f /etc/resolv.conf.new
-fi
 
 # Find the fwmark WARP uses for its own packets, like wg-quick it routes
 # everything else through its own table

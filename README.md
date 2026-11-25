@@ -41,25 +41,19 @@ this bridged approach:
 The simplest way to start TailZeroTrust is with consumer WARP, which needs no
 account at all:
 
+```bash
+docker compose up -d
 ```
-docker network create --ipv6 ip6net
-docker run -it \
-  -v ./state:/tailzerotrust/state -v ./warp:/var/lib/cloudflare-warp \
-  --cap-add NET_ADMIN --device /dev/net/tun \
-  --sysctl net.ipv4.ip_forward=1 --sysctl net.ipv6.conf.all.forwarding=1 \
-  --sysctl net.ipv4.conf.all.src_valid_mark=1 \
-  --network ip6net -p 41641:41641/udp \
-  --name tailzerotrust ghcr.io/eurocruz/tailzerotrust:latest
-```
+
+This builds `ghcr.io/mokhtarabadi/tailzerotrust-mihomo:latest` (or pulls it
+if already published), starts container `tailzerotrust-mihomo`, and persists
+Tailscale/WARP state in `./state` and `./warp`.
 
 Docker will print you an URL where you need to log in to your tailnet, and after
 that you should be good to go. Approve the exit node in the Tailscale admin
-console, select it on your device and visit <https://www.cloudflare.com/cdn-cgi/trace>,
-which should show `warp=on` (or `warp=plus`).
-
-If you want to build the latest version of the image yourself, it might be best
-to use `docker compose`. In that case build the latest image with
-`docker compose build` and finally run it with `docker compose up`.
+console, select it on your device and visit
+<https://www.cloudflare.com/cdn-cgi/trace>, which should show `warp=on` (or
+`warp=plus`).
 
 That's it, happy networking!
 
@@ -127,11 +121,11 @@ that, it installs an nftables firewall which drops traffic bypassing the tunnel.
 
 ### Updates
 
-`.github/workflows/update.yml` checks for new Tailscale, Cloudflare WARP and Go
-releases every six hours. A Go update only refreshes `:latest`. When Tailscale
-or WARP is out, it bumps the version in the Dockerfile, tags the commit as `<tailscale>-warp<warp>`, publishes the image
-for `amd64` and creates a GitHub release. The image is also rebuilt
-daily from `main` to pick up Debian security updates.
+This fork builds from `ghcr.io/eurocruz/tailzerotrust:latest`, so Tailscale,
+Cloudflare WARP and the upstream networking logic are inherited automatically.
+`.github/workflows/update.yml` tracks the latest mihomo release every six hours,
+updates `MIHOMO_VERSION` in the Dockerfile and pushes the change. The GHCR
+workflow rebuilds the image on every push to `main` and publishes it daily.
 
 ## Mihomo Proxy (added)
 
@@ -164,7 +158,7 @@ through the container's WARP tunnel).
 
 | Port | Protocol | Purpose |
 |---|---|---|
-| 41641/udp | UDP | Tailscale direct connections |
+| 41642/udp (host) → 41641/udp (container) | UDP | Tailscale direct connections |
 | 7890/tcp | TCP | Mihomo mixed proxy (HTTP + SOCKS5) |
 
 ### Notes
@@ -192,4 +186,5 @@ The container uses a fixed Tailscale hostname and Tailnet IP:
 hostname stays stable across restarts and container recreation. Tailscale
 state is persisted in the `./state` bind mount, preserving the node identity
 and Tailnet IP. Do not delete `./state` unless you intentionally want a new
-tailnet node and IP.
+tailnet node and IP. The `./warp` directory contains WARP registration
+credentials. Both directories are gitignored and must never be committed.

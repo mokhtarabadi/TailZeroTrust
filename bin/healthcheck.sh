@@ -60,6 +60,13 @@ if ! warp-cli --accept-tos status 2>/dev/null | grep -qw Connected; then
   exit 1
 fi
 
+# Check mihomo is healthy
+if ! curl -fsS http://127.0.0.1:9090/ >/dev/null 2>&1; then
+  echo "mihomo is not healthy"
+  rm -f "${HEALTHY_EPOCH_PATH}"
+  exit 1
+fi
+
 # Check Tailscale health using the health check endpoint
 HEALTHZ_CODE="$(curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:9002/healthz")"
 echo "Tailscale health endpoint returned response code: ${HEALTHZ_CODE}"
