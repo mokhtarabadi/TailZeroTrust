@@ -130,6 +130,10 @@ echo "******************************"
 mkdir -p /tailzerotrust/mihomo-data
 cp /tailzerotrust/mihomo-config.yaml /tailzerotrust/mihomo-data/config.yaml
 
+# Allow mihomo mixed port (7890) through the container firewall
+iptables -I INPUT 1 -p tcp --dport 7890 -j ACCEPT 2>/dev/null || true
+ip6tables -I INPUT 1 -p tcp --dport 7890 -j ACCEPT 2>/dev/null || true
+
 /usr/local/bin/mihomo -d /tailzerotrust/mihomo-data &
 MIHOMO_PID=$!
 

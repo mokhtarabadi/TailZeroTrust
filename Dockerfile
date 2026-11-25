@@ -12,6 +12,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 # Copy mihomo config
 COPY mihomo-config.yaml /tailzerotrust/mihomo-config.yaml
 
+# Override entrypoint with our modified version (includes mihomo firewall rule)
+COPY bin/entrypoint.sh /tailzerotrust/entrypoint.sh
+RUN chmod 755 /tailzerotrust/entrypoint.sh
+
 # Create wrapper entrypoint that starts mihomo then calls original
 RUN cat > /tailzerotrust/entrypoint-mihomo.sh << 'WRAPPER'
 #!/bin/sh
@@ -29,8 +33,9 @@ else
   echo "WARNING: mihomo did not start"
 fi
 
+# Note: iptables rule for 7890 is in entrypoint.sh (after firewall setup)
 # Call original entrypoint
-exec /tailzerotrust/entrypoint.sh "$@"
+exec /tailzerotrust/entrypoint.sh "$@" 
 WRAPPER
 RUN chmod 755 /tailzerotrust/entrypoint-mihomo.sh
 
