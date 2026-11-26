@@ -1,0 +1,51 @@
+# Infra Audit Evidence (Task 01)
+# Date: 2026-11-26
+
+## C1 Docker base image (ghcr.io/eurocruz/tailzerotrust:latest)
+# URL: https://github.com/EuroCruz/TailZeroTrust
+# last commit committer date: 2026-11-12T23:30:23Z (gh api exit 0)
+# Base Dockerfile TS_VERSION="v1.104.7" (matches latest tailscale v1.104.7)
+# Base Dockerfile WARP_VERSION="2026.8.2115.0" (matches latest WARP stable 2026.8.2115.0)
+# Verdict: no drift (base maintained, commit 2026-11-12)
+
+## C2 Tailscale
+# URL: https://github.com/tailscale/tailscale/releases
+# latest tag_name: v1.104.7 (gh api exit 0)
+# Repo pin (via base): v1.104.7
+# Verdict: no drift
+
+## C3 Cloudflare WARP client
+# URL: https://developers.cloudflare.com/cloudflare-one/team-and-resources/devices/cloudflare-one-client/download/
+# latest stable: 2026.8.2115.0 (released 2026-10-20)
+# Repo pin (via base): 2026.8.2115.0
+# Verdict: no drift
+
+## C4 mihomo
+# URL: https://github.com/MetaCubeX/mihomo/releases
+# latest tag_name: v1.19.34 (gh api exit 0)
+# Repo pin (Dockerfile ARG MIHOMO_VERSION): v1.19.34
+# Verdict: no drift (auto-tracked by update.yml every 6h)
+
+## C5 GitHub Actions - actions/checkout
+# URL: https://github.com/actions/checkout
+# Repo pin: v6 (update.yml + ghcr-publish.yml)
+# Verdict: no drift (current major 6)
+
+## C6 GitHub Actions - docker/* + cosign pins (DRIFT)
+# setup-buildx-action: pinned v4.1.0 -> latest v4.4.1  (https://github.com/docker/setup-buildx-action/releases)
+# login-action: pinned v4.2.0 -> latest v4.8.0  (https://github.com/docker/login-action/releases)
+# metadata-action: pinned v6.1.0 -> latest v6.2.0  (https://github.com/docker/metadata-action/releases)
+# build-push-action: pinned v7.2.0 -> latest v7.4.0  (https://github.com/docker/build-push-action/releases)
+# cosign-installer: pinned v4.1.2 -> latest v4.1.4  (https://github.com/sigstore/cosign-installer/releases)
+# Verdict: drift (minor/patch, same major) - follow-up bump task recommended
+
+## Blowsh search URLs
+https://github.com/MetaCubeX/mihomo/releases
+https://github.com/tailscale/tailscale/releases
+https://github.com/EuroCruz/TailZeroTrust
+https://developers.cloudflare.com/cloudflare-one/team-and-resources/devices/cloudflare-one-client/download/
+https://github.com/docker/build-push-action/releases
+https://github.com/docker/setup-buildx-action/releases
+https://github.com/docker/login-action/releases
+https://github.com/docker/metadata-action/releases
+https://github.com/sigstore/cosign-installer/releases
