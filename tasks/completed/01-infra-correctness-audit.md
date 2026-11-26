@@ -1,9 +1,10 @@
 # Task 01: Infra Correctness & Currency Audit
 
-**File:** `tasks/qa/01-infra-correctness-audit.md`
+**File:** `tasks/completed/01-infra-correctness-audit.md`
 **Source:** manager
 **Type:** improvement
-**Status:** in-progress
+**Status:** closed
+**Finished:** 2026-11-26T14:43:38Z
 **Submitted:** 2026-11-26T14:25:40Z
 **Started:** 2026-11-26T14:22:27Z
 
@@ -85,25 +86,5 @@ Brain verdict (2026-11-26):
 ## Factual Git Diff
 
 <!-- BEGIN_GIT_DIFF -->
-```diff
-diff --git a/CHANGELOG.md b/CHANGELOG.md
-new file mode 100644
-index 0000000..4970550
---- /dev/null
-+++ b/CHANGELOG.md
-@@ -0,0 +1,12 @@
-+# Changelog
-+
-+All notable changes to this project will be documented in this file.
-+
-+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-+
-+## [Unreleased]
-+
-+### Added
-+- Governance onboarding: `AGENTS.md`, `docs/conventions.md`, Living Folder Docs for `bin/` and `tailscale-patches/`, Kanban task directories.
-+- 2026-11-26: Infra correctness & currency audit (task 01) plus follow-up GHA pins bump task (task 02). Audit verified base image, Tailscale, WARP, mihomo current; identified 5 GHA pin drifts.
-\ No newline at end of file
-```
+**Factual Git Diff:** Stored in Commit Hash: `f602140a6ba69a28aca818d66096803a632c48e2`
 <!-- END_GIT_DIFF -->
