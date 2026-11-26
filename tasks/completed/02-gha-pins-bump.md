@@ -1,9 +1,10 @@
 # Task 02: Bump GitHub Actions Pins (GHA Currency)
 
-**File:** `tasks/qa/02-gha-pins-bump.md`
+**File:** `tasks/completed/02-gha-pins-bump.md`
 **Source:** manager
 **Type:** improvement
-**Status:** in-progress
+**Status:** closed
+**Finished:** 2026-11-26T14:55:55Z
 **Submitted:** 2026-11-26T14:50:28Z
 **Started:** 2026-11-26T14:46:57Z
 
@@ -69,62 +70,5 @@ checkout kept at v6. Release notes probed for "breaking/BREAKING/migration" on a
 ## Factual Git Diff
 
 <!-- BEGIN_GIT_DIFF -->
-```diff
-diff --git a/.github/workflows/ghcr-publish.yml b/.github/workflows/ghcr-publish.yml
-index 0cdb8dc..7c29e90 100644
---- a/.github/workflows/ghcr-publish.yml
-+++ b/.github/workflows/ghcr-publish.yml
-@@ -63,7 +63,7 @@ jobs:
-       # https://github.com/sigstore/cosign-installer
-       - name: Install cosign
-         if: github.event_name != 'pull_request'
--        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
-+        uses: sigstore/cosign-installer@881c63bd87e38389154debd8331404ce7ca8a3ab # v4.1.4
-         with:
-           cosign-release: 'v2.2.4'
- 
-@@ -71,13 +71,13 @@ jobs:
-       # multi-platform images and export cache
-       # https://github.com/docker/setup-buildx-action
-       - name: Set up Docker Buildx
--        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
-+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
- 
-       # Login against a Docker registry except on PR
-       # https://github.com/docker/login-action
-       - name: Log into registry ${{ env.REGISTRY }}
-         if: github.event_name != 'pull_request'
--        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
-+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
-         with:
-           registry: ${{ env.REGISTRY }}
-           username: ${{ github.actor }}
-@@ -87,7 +87,7 @@ jobs:
-       # https://github.com/docker/metadata-action
-       - name: Extract Docker metadata
-         id: meta
--        uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9 # v6.1.0
-+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
-         with:
-           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-           tags: |
-@@ -100,7 +100,7 @@ jobs:
-       # https://github.com/docker/build-push-action
-       - name: Build and push Docker image
-         id: build-and-push
--        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
-+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
-         with:
-           context: .
-           provenance: false
-diff --git a/CHANGELOG.md b/CHANGELOG.md
-index f65832d..dde1ed2 100644
---- a/CHANGELOG.md
-+++ b/CHANGELOG.md
-@@ -10,3 +10,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
- ### Added
- - Governance onboarding: `AGENTS.md`, `docs/conventions.md`, Living Folder Docs for `bin/` and `tailscale-patches/`, Kanban task directories.
- - 2026-11-26: Infra correctness & currency audit (task 01) plus follow-up GHA pins bump task (task 02). Audit verified base image, Tailscale, WARP, mihomo current; identified 5 GHA pin drifts.
-+- 2026-11-26: Bumped five GitHub Actions pins in ghcr-publish.yml to latest within same major (setup-buildx v4.4.1, login v4.8.0, metadata v6.2.0, build-push v7.4.0, cosign v4.1.4). No breaking changes found.
-```
+**Factual Git Diff:** Stored in Commit Hash: `5af03c9a51f7f03589f01bbff86b578432595e0e`
 <!-- END_GIT_DIFF -->
