@@ -1,4 +1,5 @@
 #!/bin/sh
+# Sibling Docs: bin/README.md | Decisions: bin/DECISIONS.md
 
 set -e
 

@@ -1,4 +1,5 @@
 #!/bin/sh
+# Sibling Docs: bin/README.md | Decisions: bin/DECISIONS.md
 
 # This is a path to execute scripts on a healthy Tailscale,
 # must be the same path as set in entrypoint.sh
